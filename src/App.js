@@ -3,7 +3,7 @@ import {Pagination} from "./components/Pagination";
 import {Post} from "./components/Post";
 
 const url = 'https://jsonplaceholder.typicode.com/posts';
-const numOfPosts = 10;
+const numOfPosts = 11;
 const pageLimit = 2;
 const dataLimit = 3;
 
@@ -20,7 +20,7 @@ export default function App() {
                 // console.log("Data:", data, "; length:", data.length);
                 let posts;
                 if (data.length > numOfPosts) {
-                    posts = data.slice(0, numOfPosts + 1);
+                    posts = data.slice(0, numOfPosts);
                 } else
                     posts = data;
                 setPosts(posts);
