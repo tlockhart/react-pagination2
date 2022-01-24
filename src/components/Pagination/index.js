@@ -29,7 +29,7 @@ export let Pagination = ({data, RenderComponent, title, recommendedPageLimit, da
         const nextPagePosition =
             nextPageDivisibility === 0 ? recommendedPageLimit : nextPageDivisibility;
 
-        const offset = nextPageDivisibility != 1 ? nextPagePosition - 1 : 0;
+        const offset = nextPageDivisibility !== 1 ? nextPagePosition - 1 : 0;
 
         nextPage += -offset;
 
@@ -54,7 +54,7 @@ export let Pagination = ({data, RenderComponent, title, recommendedPageLimit, da
                 ? recommendedPageLimit
                 : currentPageDivisibility;
 
-        const offset = currentPageDivisibility != 1 ? currentPagePosition - 1 : 0;
+        const offset = currentPageDivisibility !== 1 ? currentPagePosition - 1 : 0;
 
         previousPage += -offset;
 
