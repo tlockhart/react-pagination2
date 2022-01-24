@@ -3,6 +3,9 @@ import {Pagination} from "./components/Pagination";
 import {Post} from "./components/Post";
 
 const url = 'https://jsonplaceholder.typicode.com/posts';
+const numOfPosts = 10;
+const pageLimit = 2;
+const dataLimit = 3;
 
 export default function App() {
     const [posts, setPosts] = useState([]);
@@ -10,13 +13,23 @@ export default function App() {
 
     // Request posts:
     useEffect(() => {
-        fetch(url)
-            .then((response) => {
-                if (response.ok) return response.json();
-                throw new Error('something went wrong while requesting posts');
-            })
-            .then((posts) => setPosts(posts))
-            .catch((error) => setError(error.message));
+        const getPosts = async () => {
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                // console.log("Data:", data, "; length:", data.length);
+                let posts;
+                if (data.length > numOfPosts) {
+                    posts = data.slice(0, numOfPosts + 1);
+                } else
+                    posts = data;
+                setPosts(posts);
+            } catch (e) {
+                console.log("Error:", e);
+            }
+        };
+        getPosts();
+
     }, []);
 
     if (error) return <h1>{error}</h1>;
@@ -29,8 +42,8 @@ export default function App() {
                         data={posts}
                         RenderComponent={Post}
                         title="Posts"
-                        pageLimit={3}
-                        dataLimit={10}
+                        recommendedPageLimit={pageLimit}
+                        dataLimit={dataLimit}
                     />
                 </>
             ) : (

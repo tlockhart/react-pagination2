@@ -9,22 +9,67 @@
 import React, {useState, useEffect} from "react";
 import "./styles.css";
 
-export let Pagination = ({data, RenderComponent, title, pageLimit, dataLimit}) => {
-    const [pages] = useState(Math.round(data.length / dataLimit));
+export let Pagination = ({data, RenderComponent, title, recommendedPageLimit, dataLimit}) => {
+    const recordCount = data.length;
+    const [pages] = useState(Math.ceil(recordCount / dataLimit));
     const [currentPage, setCurrentPage] = useState(1);
+
+    const totalPgsDivisibility = recommendedPageLimit === 1 ? pages - recommendedPageLimit : pages % recommendedPageLimit;
+    const totalPgsInRecLimit = totalPgsDivisibility === 0;
 
     useEffect(() => {
         window.scrollTo({behavior: 'smooth', top: '0px'});
-    }, [currentPage]);
+    }, [currentPage, pages]);
 
     // Increments the current page by calling setCurrentPage.
     const goToNextPage = () => {
-        setCurrentPage((page) => page + 1);
+        let nextPage = currentPage + recommendedPageLimit;
+        const nextPageDivisibility = nextPage % recommendedPageLimit;
+
+        const nextPagePosition =
+            nextPageDivisibility === 0 ? recommendedPageLimit : nextPageDivisibility;
+
+        const offset = nextPageDivisibility != 1 ? nextPagePosition - 1 : 0;
+
+        nextPage += -offset;
+
+        let curPgCanShiftFwd = nextPage <= pages;
+
+        switch (true) {
+            case curPgCanShiftFwd:
+                setCurrentPage(nextPage);
+                break;
+            default:
+                setCurrentPage((page) => page + 1);
+        }
     }
 
     // Decrements the current page by calling setCurrentPage
     const goToPreviousPage = () => {
-        setCurrentPage((page) => page - 1);
+        let previousPage = Math.abs(currentPage - recommendedPageLimit);
+        const currentPageDivisibility = currentPage % recommendedPageLimit;
+
+        const currentPagePosition =
+            currentPageDivisibility === 0
+                ? recommendedPageLimit
+                : currentPageDivisibility;
+
+        const offset = currentPageDivisibility != 1 ? currentPagePosition - 1 : 0;
+
+        previousPage += -offset;
+
+        let curPgCanShiftBkwds = previousPage >= 1;
+
+        // Override for EdgeCase currentPage <= recommendedPageLimit
+        if (currentPage <= recommendedPageLimit) curPgCanShiftBkwds = false;
+
+        switch (true) {
+            case curPgCanShiftBkwds:
+                setCurrentPage(previousPage);
+                break;
+            default:
+                setCurrentPage((page) => page - 1);
+        }
     }
 
     // Changes the current page to the page number that was clicked by the user.
@@ -44,8 +89,44 @@ export let Pagination = ({data, RenderComponent, title, pageLimit, dataLimit}) =
     // Shows the group of page numbers in the pagination.
     // Since PageLimit is 3, we will show 3 numbers
     const getPaginationGroup = () => {
-        let start = Math.floor((currentPage - 1) / pageLimit) * pageLimit;
-        return new Array(pageLimit).fill().map((_, idx) => start + idx + 1);
+        /*************************************************************
+         * EdgeCases: pageNumbers size less than recommendedPageLimit
+         *************************************************************/
+
+        let isGrpSizeLTRecLimit =
+            !totalPgsInRecLimit && recommendedPageLimit < pages;
+        let isGrpSizeGTRecLimit =
+            !totalPgsInRecLimit && recommendedPageLimit > pages;
+
+        let startOfFinalSet = pages - totalPgsDivisibility + 1;
+        let curPgInFinalSet = currentPage >= startOfFinalSet;
+        /*********************************************************/
+
+        // Create array to hold page numbers
+        const pageNumbers = [];
+
+        // Calculate the starting page, based on the currentPage
+        let start =
+            Math.floor((currentPage - 1) / recommendedPageLimit) *
+            recommendedPageLimit;
+
+        // Fill the array with the indexes of the pageNumber items
+        for (let idx = 1; idx <= recommendedPageLimit; idx++) {
+            let newIdx = start + idx;
+            pageNumbers.push(newIdx);
+        }
+        // console.log("Pages to Display Per Group:", pageNumbers);
+
+        // Pop pageNumbers array for edgeCase:
+        if ((isGrpSizeLTRecLimit || isGrpSizeGTRecLimit) && curPgInFinalSet) {
+            let numberOfPops = recommendedPageLimit - totalPgsDivisibility;
+
+            // Pop of extra array:
+            for (let idx = 1; idx <= numberOfPops; idx++) {
+                pageNumbers.pop();
+            }
+        }
+        return pageNumbers;
     };
 
     return (
@@ -59,12 +140,7 @@ export let Pagination = ({data, RenderComponent, title, pageLimit, dataLimit}) =
                 ))}
             </div>
 
-            {/* show the pagiantion
-        it consists of next and previous buttons
-        along with page numbers, in our case, 5 page
-        numbers at a time
-    */}
-            <div className="pagination">
+            {recordCount > dataLimit ? (<div className="pagination">
                 {/* previous button */}
                 <button
                     onClick={goToPreviousPage}
@@ -91,7 +167,7 @@ export let Pagination = ({data, RenderComponent, title, pageLimit, dataLimit}) =
                 >
                     next
                 </button>
-            </div>
+            </div>) : null}
         </div>
     );
 }
